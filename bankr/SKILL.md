@@ -225,12 +225,14 @@ Omit `threadId` to start a new conversation. CLI equivalent: `bankr agent prompt
 |----------|--------|------|-------------|
 | `/wallet/me` | GET | Read | Wallet info (address, chains) |
 | `/wallet/portfolio` | GET | Read | Portfolio balances, supports `?include=pnl,nfts` for progressive loading |
+| `/wallet/swap-quote` | POST | Write | Quote a same-chain EVM swap (returns price, gas estimate, route) |
+| `/wallet/swap` | POST | Write | Execute a same-chain EVM swap (funds return to caller's wallet) |
 | `/wallet/transfer` | POST | Write | Transfer tokens (multi-chain, supports `allowedRecipients` enforcement) |
 | `/wallet/sign` | POST | Write | Sign messages, typed data, or transactions |
 | `/wallet/submit` | POST | Write | Submit raw transactions to chain |
 
 - **Read endpoints** (`/wallet/me`, `/wallet/portfolio`) — any valid API key with a wallet
-- **Write endpoints** (`/wallet/transfer`, `/wallet/sign`, `/wallet/submit`) — require `walletApiEnabled`, `readOnly` check, and `allowedRecipients` enforcement
+- **Write endpoints** (`/wallet/swap-quote`, `/wallet/swap`, `/wallet/transfer`, `/wallet/sign`, `/wallet/submit`) — require `walletApiEnabled` and `readOnly` check. `/wallet/transfer` also enforces `allowedRecipients`; `/wallet/swap` does not (output returns to the caller's own wallet)
 - IP allowlist enforced on all endpoints
 
 #### Recipient & user lookup helpers (public, no auth)
@@ -240,7 +242,7 @@ Omit `threadId` to start a new conversation. CLI equivalent: `bankr agent prompt
 | `/addresses/resolve?value=<recipient>&type=<address\|ens\|twitter\|farcaster>` | GET | Resolve a recipient (0x address, ENS-style name `.eth`/`.base.eth`/`.cb.id`, or social handle) to a 0x address. Used by `bankr wallet transfer --to` to support ENS input. |
 | `/users/search?...` | GET | Search Bankr users by Twitter or Farcaster username. |
 
-The legacy aliases `/public/resolve-recipient` and `/public/search-users` still work but are marked deprecated (Sunset: 2026-06-03) — migrate callers to the structured `/addresses/*` and `/users/*` namespaces.
+The legacy aliases `/public/resolve-recipient` and `/public/search-users` have been removed (sunset 2026-06-03). Use the `/addresses/*` and `/users/*` namespaces instead.
 
 #### Agent API (`/agent/*`) — AI-powered endpoints (async)
 
