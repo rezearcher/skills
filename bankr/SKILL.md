@@ -1,6 +1,6 @@
 ---
 name: bankr
-description: AI-powered crypto trading agent, wallet API, and LLM gateway via natural language. Use when the user wants to trade crypto, check portfolio balances (with PnL and NFTs), view token prices, search tokens, transfer crypto, manage NFTs, use leverage (Hyperliquid or Avantis), bet on Polymarket, deploy tokens, set up automated trading, sign and submit raw transactions, call or deploy x402 paid API endpoints, browse the web, or access LLM models through the Bankr LLM gateway funded by your Bankr wallet. Supports Base, Ethereum, Polygon, Solana, Unichain, World Chain, Arbitrum, and BNB Chain.
+description: AI-powered crypto trading agent, wallet API, and LLM gateway via natural language. Use when the user wants to trade crypto, check portfolio balances (with PnL and NFTs), view token prices, search tokens, transfer crypto, manage NFTs, use leverage (Hyperliquid or Avantis), bet on Polymarket, deploy tokens, set up a Glidepath gradual exit for a token you launched, set up automated trading, sign and submit raw transactions, call or deploy x402 paid API endpoints, browse the web, or access LLM models through the Bankr LLM gateway funded by your Bankr wallet. Supports Base, Ethereum, Polygon, Solana, Unichain, World Chain, Arbitrum, and BNB Chain.
 metadata:
   {
     "clawdbot":
@@ -502,6 +502,7 @@ The [Bankr LLM Gateway](https://docs.bankr.bot/llm-gateway/overview) is a unifie
 - In OpenClaw config, prefix model IDs with `bankr/` (e.g. `bankr/claude-sonnet-4.6`). In direct API calls, use bare IDs (e.g. `claude-sonnet-4.6`)
 - **Per-model discounts** available for Bankr Club members and partners — applied automatically at billing time
 - **Expiring credit grants**: promotional or developer grants may carry an expiry date. Your spendable balance is your permanent (purchased) credits plus any unexpired grants — grants are spent first (soonest-expiring first) and drop off automatically at expiry
+- **Private (confidential) inference**: append `:private` to a model ID (e.g. `deepseek-v4-flash:private`) to force the request onto a confidential / TEE-backed provider. Only models that expose a private slot support it (`bankr llm models` flags them); others reject the `:private` request rather than silently falling back
 
 ### Quick Commands
 
@@ -614,17 +615,30 @@ For full details — setup paths, model list, provider config, SDK examples, key
 
 ### Token Deployment
 
-- **EVM (Base)**: Deploy ERC20 tokens via Clanker with customizable metadata and social links
+- **EVM (Base, default)**: Launch ERC20 tokens via Doppler on a Uniswap V4 pool with customizable metadata and social links. Fixed **100 billion** supply, **0.7%** swap fee split **95% creator / 5% protocol**. Tokens deploy to Base by default. Legacy Clanker tokens remain claimable (claims auto-detect Doppler vs Clanker).
 - **Solana**: Launch SPL tokens via Raydium LaunchLab with bonding curve and auto-migration to CPMM
 - Creator fee claiming on both chains
 - Fee Key NFTs for Solana (50% LP trading fees post-migration)
 - Optional fee recipient designation with 99.9%/0.1% split (Solana)
 - Both creator AND fee recipient can claim bonding curve fees (gas sponsored)
 - Optional vesting parameters (Solana)
-- Rate limits: 1/day standard, 10/day Bankr Club (gas sponsored within limits)
+- Base launch limits: 50/day standard, 100/day Bankr Club (gas sponsored within limits)
 - Tokens deployed through Bankr are always visible in your portfolio, even without market price data
 
 **Reference**: [references/token-deployment.md](references/token-deployment.md)
+
+### Glidepath (Gradual Builder Exit)
+
+Glidepath is an AI-paced way for token builders to take profit **gradually** instead of dumping. You commit a slice of your own creator-fee tokens and the AI sells them back into the pool in tiny, liquidity-sized increments over time, so the chart absorbs ordinary sell pressure instead of taking a cliff.
+
+- **Never pulls liquidity** — only the tokens you explicitly commit are sold; your LP position is untouched
+- **~48h heads-up window** before selling starts, then AI-sized slices each capped to a fraction of live pool depth
+- Selling begins from the **current** market cap; committed / sold / remaining shown as a public exit envelope on your token page
+- **Cancel anytime** — instant undo within ~30 min of committing; after selling starts, unsold tokens return after a 7-day cooldown
+- Managed from your token page at [bankr.bot](https://bankr.bot)
+- Selling your own fee token through Bankr's ordinary swap/limit/stop/DCA/TWAP tools is restricted — use a Glidepath for builder exits
+
+**Reference**: [references/glidepath.md](references/glidepath.md)
 
 ### Automation
 
@@ -950,6 +964,8 @@ See [references/safety.md](references/safety.md) for comprehensive safety guidan
 - "Short ETH with 5x on hyperliquid"
 - "Open 5x long on ETH with $100"
 - "Short BTC 10x with stop loss at $45k"
+- "Long TSLA with 5x on hyperliquid" (stocks via HIP-3)
+- "Long spacex on hyperliquid" (company names resolve to their HIP-3 ticker, e.g. SPCX)
 - "Show my hyperliquid positions"
 - "Show my Avantis positions"
 
