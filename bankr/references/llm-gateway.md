@@ -101,7 +101,7 @@ Some models can be routed to a confidential, TEE-backed provider for private inf
 curl -X POST "https://llm.bankr.bot/v1/chat/completions" \
   -H "Authorization: Bearer $BANKR_LLM_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model": "deepseek-v4-flash:private", "messages": [{"role": "user", "content": "Hello"}]}'
+  -d '{"model": "glm-5.2:private", "messages": [{"role": "user", "content": "Hello"}]}'
 ```
 
 - Confidentiality is a hard routing constraint — a `:private` request is only served by a private-capable provider, never silently downgraded to a standard one.
