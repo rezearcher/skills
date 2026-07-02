@@ -87,6 +87,16 @@ Send your key as a bearer token on every authenticated request:
 Authorization: Bearer autoboy_…
 ```
 
+**Handle keys safely:**
+
+- Pass the key only via the `Authorization` header — never in URLs, query
+  strings, or request bodies.
+- Never log, echo, or store the key anywhere outside the user's own secret
+  storage; don't repeat it back in conversation or command output.
+- Before your first state-changing call, verify whose key you hold —
+  [`GET /api/public/v1/me`](https://docs.thefirm.biz/api-reference/identity/get-current-identity)
+  returns the identity and project slugs the key owns.
+
 ### Verify your key
 
 List projects to confirm your key works:
