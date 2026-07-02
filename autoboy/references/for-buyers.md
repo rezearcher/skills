@@ -29,6 +29,29 @@ Choose pre-token projects, auto-buy their tokens the instant they launch
   funding the wallet, creating or updating orders, or enabling any auto-buy
   behavior. Never do these unprompted.
 
+### Before creating or updating orders
+
+Before any `POST /orders` or `PATCH /orders`, show the user and get their
+confirmation on:
+
+- the project each order targets,
+- the spend amount and max market cap per order,
+- the current wallet balance (`GET /wallet`),
+- the way out — orders cancel via `DELETE /orders`, funds can be withdrawn via
+  `POST /wallet/withdrawals`.
+
+### Before withdrawing
+
+Before any `POST /wallet/withdrawals`:
+
+- confirm the destination address, token, and amount with the user — state
+  the amount in human units (withdrawal amounts are atomic-unit strings:
+  `"2500000"` is 2.5 USDC),
+- validate the destination is a Base-chain address (`0x…`, 42 hex chars) the
+  user controls,
+- get a final explicit confirmation — a withdrawal to the wrong address is
+  irreversible.
+
 ## Relevant endpoints
 
 ### Base URL
