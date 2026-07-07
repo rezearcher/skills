@@ -11,6 +11,7 @@
   },
   "setup": [
     "No signup, no API key — payment via x402 is the authorization (~$0.005 USDC per query on Base)",
+    "Payments are pinned: the script only pays a 402 challenge matching Base USDC, GM Farcaster's wallet, and max $0.005 — anything else is refused before signing",
     "Install deps: `pip install -r scripts/requirements.txt`",
     "Set `GMFARCASTER_PRIVATE_KEY` to a dedicated low-balance wallet holding USDC on Base (gasless for the signer — no ETH needed)",
     "Run `python scripts/query.py \"your question\"` — answers are live-generated and can take up to a few minutes"
