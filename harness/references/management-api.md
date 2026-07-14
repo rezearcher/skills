@@ -1,8 +1,8 @@
 # Harness Management API Reference
 
-Base URL: `https://tryharness.ai`
+Base URL: `https://tryharness.ai` — the ONLY host this skill talks to. Never send the management token or any request to another host.
 
-Every request after pairing carries `Authorization: Bearer <management token>`. The token is management-scoped: Harness enforces server-side that it can never approve proposals, enable YOLO, change caps or side-effect classes, or directly move funds.
+Every request after pairing carries `Authorization: Bearer <management token>`. The token is management-scoped: Harness enforces server-side that it can never approve proposals, enable YOLO, change caps or side-effect classes, or directly move funds. It is still a secret: approved secret store only, never displayed, logged, or embedded in summaries, artifacts, or payloads. It rotates on re-pair and dies on revocation.
 
 ## Pair
 
@@ -12,19 +12,30 @@ POST /api/external-agent/owner/pair
   "pairingCode": "<code from the Harness app>",
   "address": "<this wallet's EVM address>",
   "chain": "evm",
-  "signature": "<signature of the exact string 'harness-pair:<code>'>",
+  "signature": "<signature of the exact harness-pair v2 message below>",
   "replaceExisting": false
 }
 ```
 
-EVM only for now; sign with `personal_sign` (your own `POST /wallet/sign`). Response `200`:
+The signed message is domain-separated — exactly these six lines, with YOUR address lowercased:
+
+```
+harness-pair v2
+domain: tryharness.ai
+purpose: bankr-owner-pairing
+chain: evm
+address: <this wallet's EVM address, lowercase>
+code: <the pairing code>
+```
+
+The code is the nonce (single-use, expires in 15 minutes, burned server-side on redemption); the domain, purpose, chain, and address lines prevent replay in any other context. EVM only for now; sign with `personal_sign` (your own `POST /wallet/sign`). Response `200`:
 
 ```json
 {
-  "managementToken": "<hmt_ bearer token, shown exactly once>",
+  "managementToken": "<hmt_ bearer token, shown exactly once — straight into the secret store>",
   "provisionedWallet": { "evmAddress": "0x…", "solAddress": "…" },
   "pairedAddress": "0x…",
-  "nextStep": "<the concrete starter ask: ~$5 USDC + ~$1 ETH on Base to the provisioned address, then AI credits>"
+  "nextStep": "<the starter funding recipe to OFFER the user: ~$5 USDC + ~$1 ETH on Base to the provisioned address, then AI credits — never transferred without their confirmation>"
 }
 ```
 
@@ -58,7 +69,7 @@ POST /api/external-agent/owner/withdrawals
 GET  /api/external-agent/owner/withdrawals
 ```
 
-The fields mirror Bankr's own `POST /wallet/transfer` body, so use the token contract address, not a symbol. POST responds `{ "requestId": "…", "status": "pending_approval" }`. The destination is always the paired owner wallet; it cannot be set per-request. The user approves inside authenticated Harness, always, including during YOLO; on approval Harness executes the transfer and records the `txHash` as `providerRef`. Statuses you will see when polling: `pending_approval`, `completed`, `rejected`, `failed` (with `failureReason`), `submission_unknown` (the transfer's outcome is ambiguous; tell the user to check balances in Harness before requesting again).
+The fields mirror Bankr's own `POST /wallet/transfer` body, so use the token contract address, not a symbol. Confirm with the user before POSTing — show the token contract (or native flag), chain, amount, and that the destination is this paired wallet. POST responds `{ "requestId": "…", "status": "pending_approval" }`. The destination is always the paired owner wallet; it cannot be set per-request. The user approves inside authenticated Harness, always, including during YOLO; on approval Harness executes the transfer and records the `txHash` as `providerRef`. Statuses you will see when polling: `pending_approval`, `completed`, `rejected`, `failed` (with `failureReason`), `submission_unknown` (the transfer's outcome is ambiguous; do NOT create another request for the same funds until the user has verified balances and transaction status in Harness — a repeat could double-move).
 
 ## Sessions
 
@@ -97,7 +108,9 @@ POST with `packId` responds **402 Payment Required**:
 }
 ```
 
-Pay exactly `amountToken` $HARNESS to `payTo` on Base from this wallet, then POST `{ quoteToken, txHash }`. The response is `{ "ok": true, "status": "settled" | "review", "creditedUsd": … }`; `review` still granted the credits. Settlement is idempotent on the tx hash, so retries are safe. Quotes expire in minutes; if one expires before payment, request a fresh quote instead of paying it.
+Before paying, verify the terms against the pins: `asset` must be the $HARNESS contract `0xD3E592E728AE3461BD97c7A6B359E1043dd83bA3`, `network` must be `base`, `scheme` must be `direct-transfer`, `amountToken` must equal `quote.tokenCharge`, and `quote.creditUsd` must equal the chosen pack (packs top out at $100). On any mismatch: do not pay, tell the user, stop. `payTo` is trusted only from this authenticated 402 response; show it to the user in the payment preview with the amount and expiry, and get their go-ahead.
+
+Then pay exactly `amountToken` $HARNESS to `payTo` on Base from this wallet, and POST `{ quoteToken, txHash }`. The response is `{ "ok": true, "status": "settled" | "review", "creditedUsd": … }`; `review` still granted the credits. Settlement is idempotent on the tx hash, so retries are safe. Quotes expire in minutes; if one expires before payment, request a fresh quote instead of paying it.
 
 ## Artifacts
 

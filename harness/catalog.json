@@ -11,7 +11,7 @@
   },
   "setup": [
     "Create a Harness account at https://tryharness.ai and get a pairing code from Settings > Bankr",
-    "Pair once: the skill signs `harness-pair:<code>` with this wallet's EVM key and exchanges it for a management token",
+    "Pair once: the skill signs the domain-separated `harness-pair v2` message with this wallet's EVM key and exchanges it for a management token (secret-store only, never displayed)",
     "Fund in one deposit: about $5 USDC plus about $1 of ETH (gas) on Base to the provisioned wallet address",
     "Withdrawals only create a request — the user always approves them inside the Harness app"
   ],
